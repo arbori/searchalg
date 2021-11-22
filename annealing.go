@@ -100,11 +100,12 @@ func (ann annealing) run() {
 ////////////////////////////////////////////////////////////////////////////////////
 
 type time_table struct {
-	schedule_limits [4]int
-	schedule        [][][][]int
+	change_probability float32
+	schedule_limits    [4]int
+	schedule           [][][][]int
 }
 
-func new_time_table(disciplinas int, salas int, horarios int, dias_semana int) time_table {
+func new_time_table(disciplinas int, salas int, horarios int, dias_semana int, changeProb float32) time_table {
 	var disciplina int
 	var sala int
 	var horario int
@@ -113,7 +114,8 @@ func new_time_table(disciplinas int, salas int, horarios int, dias_semana int) t
 	rand.Seed(time.Now().UnixNano())
 
 	tt := time_table{
-		schedule_limits: [4]int{disciplinas, salas, horarios, dias_semana},
+		change_probability: changeProb,
+		schedule_limits:    [4]int{disciplinas, salas, horarios, dias_semana},
 	}
 
 	tt.schedule = make([][][][]int, disciplinas, disciplinas)
@@ -137,6 +139,49 @@ func new_time_table(disciplinas int, salas int, horarios int, dias_semana int) t
 	return tt
 }
 
+func penalty(tt *time_table) float64 {
+	var disciplina int
+	var sala int
+	var horario int
+	var dia_semana int
+
+	result := 0.0
+
+	disciplina_duplicada := 0
+
+	for sala = 0; sala < tt.schedule_limits[1]; sala += 1 {
+		for horario = 0; horario < tt.schedule_limits[2]; horario += 1 {
+			for dia_semana = 0; dia_semana < tt.schedule_limits[3]; dia_semana += 1 {
+				for disciplina = 0; disciplina < tt.schedule_limits[0]; disciplina += 1 {
+					disciplina_duplicada += tt.schedule[disciplina][sala][horario][dia_semana]
+				}
+
+				if disciplina_duplicada > 1 {
+					result += 1
+				}
+			}
+		}
+	}
+
+	sala_com_duas_disciplinas := 0
+
+	for horario = 0; horario < tt.schedule_limits[2]; horario += 1 {
+		for dia_semana = 0; dia_semana < tt.schedule_limits[3]; dia_semana += 1 {
+			for disciplina = 0; disciplina < tt.schedule_limits[0]; disciplina += 1 {
+				for sala = 0; sala < tt.schedule_limits[1]; sala += 1 {
+					sala_com_duas_disciplinas += tt.schedule[disciplina][sala][horario][dia_semana]
+				}
+
+				if sala_com_duas_disciplinas > 1 {
+					result += 1
+				}
+			}
+		}
+	}
+
+	return result
+}
+
 func (tt *time_table) f() float64 {
 	var disciplina int
 	var sala int
@@ -155,7 +200,7 @@ func (tt *time_table) f() float64 {
 		}
 	}
 
-	return result
+	return result - penalty(tt)
 }
 
 func (tt *time_table) compute() float64 {
@@ -172,7 +217,7 @@ func (tt *time_table) reconfigure() {
 		for sala = 0; sala < tt.schedule_limits[1]; sala += 1 {
 			for horario = 0; horario < tt.schedule_limits[2]; horario += 1 {
 				for dia_semana = 0; dia_semana < tt.schedule_limits[3]; dia_semana += 1 {
-					if rand.Float32() < .4 {
+					if rand.Float32() < tt.change_probability {
 						tt.schedule[disciplina][sala][horario][dia_semana] = 1 - tt.schedule[disciplina][sala][horario][dia_semana]
 					}
 				}
@@ -206,42 +251,5 @@ func (tt *time_table) assign(f function) {
 }
 
 func (tt *time_table) isValid() bool {
-	var disciplina int
-	var sala int
-	var horario int
-	var dia_semana int
-
-	disciplina_duplicada := 0
-
-	for sala = 0; sala < tt.schedule_limits[1]; sala += 1 {
-		for horario = 0; horario < tt.schedule_limits[2]; horario += 1 {
-			for dia_semana = 0; dia_semana < tt.schedule_limits[3]; dia_semana += 1 {
-				for disciplina = 0; disciplina < tt.schedule_limits[0]; disciplina += 1 {
-					disciplina_duplicada += tt.schedule[disciplina][sala][horario][dia_semana]
-				}
-
-				if disciplina_duplicada > 1 {
-					return false
-				}
-			}
-		}
-	}
-
-	sala_com_duas_disciplinas := 0
-
-	for horario = 0; horario < tt.schedule_limits[2]; horario += 1 {
-		for dia_semana = 0; dia_semana < tt.schedule_limits[3]; dia_semana += 1 {
-			for disciplina = 0; disciplina < tt.schedule_limits[0]; disciplina += 1 {
-				for sala = 0; sala < tt.schedule_limits[1]; sala += 1 {
-					sala_com_duas_disciplinas += tt.schedule[disciplina][sala][horario][dia_semana]
-				}
-
-				if sala_com_duas_disciplinas > 1 {
-					return false
-				}
-			}
-		}
-	}
-
 	return true
 }
