@@ -1,8 +1,6 @@
 package searchalg
 
 import (
-	"errors"
-	"fmt"
 	"math"
 	"math/rand"
 	"time"
@@ -62,9 +60,6 @@ func (ann annealing) run() {
 	// Calcula o momento de termino T.
 	fim := time.Now().Local().Add(time.Second * time.Duration(ann.prazo))
 
-	fmt.Println(&ann.best)
-	fmt.Println(ann.best)
-
 	// Processa o resfriamento do sistema.
 	for fim.After(time.Now()) {
 		// Busca uma configuração para a dada temperatura
@@ -100,8 +95,6 @@ func (ann annealing) run() {
 		ann.passoAtual = ann.passos
 		ann.temperaturaAtual = ann.resfriamento * ann.temperaturaAtual
 	}
-
-	fmt.Println(ann.best)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -111,7 +104,40 @@ type time_table struct {
 	schedule        [][][][]int
 }
 
-func (tt *time_table) compute() float64 {
+func new_time_table(disciplinas int, salas int, horarios int, dias_semana int) time_table {
+	var disciplina int
+	var sala int
+	var horario int
+	var dia_semana int
+
+	rand.Seed(time.Now().UnixNano())
+
+	tt := time_table{
+		schedule_limits: [4]int{disciplinas, salas, horarios, dias_semana},
+	}
+
+	tt.schedule = make([][][][]int, disciplinas, disciplinas)
+
+	for disciplina = 0; disciplina < tt.schedule_limits[0]; disciplina += 1 {
+		tt.schedule[disciplina] = make([][][]int, salas, salas)
+
+		for sala = 0; sala < tt.schedule_limits[1]; sala += 1 {
+			tt.schedule[disciplina][sala] = make([][]int, horarios, horarios)
+
+			for horario = 0; horario < tt.schedule_limits[2]; horario += 1 {
+				tt.schedule[disciplina][sala][horario] = make([]int, dias_semana, dias_semana)
+
+				for dia_semana = 0; dia_semana < tt.schedule_limits[3]; dia_semana += 1 {
+					tt.schedule[disciplina][sala][horario][dia_semana] = rand.Int() % 2
+				}
+			}
+		}
+	}
+
+	return tt
+}
+
+func (tt *time_table) f() float64 {
 	var disciplina int
 	var sala int
 	var horario int
@@ -132,17 +158,31 @@ func (tt *time_table) compute() float64 {
 	return result
 }
 
-func (tt *time_table) reconfigure() {
-	disciplina := rand.Intn(tt.schedule_limits[0])
-	sala := rand.Intn(tt.schedule_limits[1])
-	horario := rand.Intn(tt.schedule_limits[2])
-	dia_semana := rand.Intn(tt.schedule_limits[3])
+func (tt *time_table) compute() float64 {
+	return -tt.f()
+}
 
-	tt.schedule[disciplina][sala][horario][dia_semana] = 1 - tt.schedule[disciplina][sala][horario][dia_semana]
+func (tt *time_table) reconfigure() {
+	var disciplina int
+	var sala int
+	var horario int
+	var dia_semana int
+
+	for disciplina = 0; disciplina < tt.schedule_limits[0]; disciplina += 1 {
+		for sala = 0; sala < tt.schedule_limits[1]; sala += 1 {
+			for horario = 0; horario < tt.schedule_limits[2]; horario += 1 {
+				for dia_semana = 0; dia_semana < tt.schedule_limits[3]; dia_semana += 1 {
+					if rand.Float32() < .4 {
+						tt.schedule[disciplina][sala][horario][dia_semana] = 1 - tt.schedule[disciplina][sala][horario][dia_semana]
+					}
+				}
+			}
+		}
+	}
 }
 
 func (tt *time_table) assign(f function) {
-	val := f.(time_table)
+	val := f.(*time_table)
 
 	var disciplina int
 	var sala int
@@ -204,53 +244,4 @@ func (tt *time_table) isValid() bool {
 	}
 
 	return true
-}
-
-////////////////////////////////////////////////////////////////////////////////////
-func  main()  {
-	best_func := &time_table{
-		schedule_limits [4]int {3, 5, 3, 5}
-		schedule        [][][][]int {
-			{}
-		}
-	
-	}
-	last_func := &quadratic{-2, 3, 2, +1}
-
-	searchAnnealing := annealing{
-		temperaturaInicial: math.MaxFloat64,
-		temperaturaFinal:   10E-11,
-		temperaturaAtual:   math.MaxFloat64,
-		resfriamento:       (1 - .05),
-		passos:             100,
-		passoAtual:         100,
-		energiaInicial:     0,
-		energiaFinal:       0,
-		delta:              0,
-		sorteio:            0,
-		prob:               0,
-		prazo:              10,
-		best:               best_func,
-		last:               last_func,
-	}
-
-	fmt.Println(&searchAnnealing.best)
-	fmt.Println(searchAnnealing.best)
-
-	/*
-		fim := time.Now().Local().Add(time.Second * time.Duration(1))
-
-		fmt.Println(fim)
-		for fim.After(time.Now()) {
-			fmt.Println(time.Now())
-		}
-	*/
-
-	searchAnnealing.run()
-
-	fmt.Fprintf(os.Stdout, "Maximum value of f(x) = %.3f\n", best_func.x)
-
-	if math.Abs(best_func.x-maximumValue) > float64(10e-5) {
-		t.Fatalf("Annealing did not found the better value that supose to be 0.75")
-	}
 }

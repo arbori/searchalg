@@ -1,10 +1,9 @@
 package searchalg
 
 import (
-	"fmt"
+	"log"
 	"math"
 	"math/rand"
-	"os"
 	"testing"
 )
 
@@ -59,12 +58,14 @@ func (q *quadratic) isValid() bool {
 const maximumValue = 0.75
 
 func TestFoundMaximum(t *testing.T) {
+	log.Println("TestFoundMaximum...")
+
 	best_func := &quadratic{-2, 3, 2, -1}
 	last_func := &quadratic{-2, 3, 2, +1}
 
 	searchAnnealing := annealing{
 		temperaturaInicial: math.MaxFloat64,
-		temperaturaFinal:   10E-11,
+		temperaturaFinal:   10e-11,
 		temperaturaAtual:   math.MaxFloat64,
 		resfriamento:       (1 - .05),
 		passos:             100,
@@ -79,24 +80,49 @@ func TestFoundMaximum(t *testing.T) {
 		last:               last_func,
 	}
 
-	fmt.Println(&searchAnnealing.best)
-	fmt.Println(searchAnnealing.best)
-
-	/*
-		fim := time.Now().Local().Add(time.Second * time.Duration(1))
-
-		fmt.Println(fim)
-		for fim.After(time.Now()) {
-			fmt.Println(time.Now())
-		}
-	*/
-
 	searchAnnealing.run()
 
-	fmt.Fprintf(os.Stdout, "Maximum value of f(x) = %.3f\n", best_func.x)
+	log.Printf("Maximum value of f(x) = %.3f\n", best_func.x)
 
 	if math.Abs(best_func.x-maximumValue) > float64(10e-5) {
 		t.Fatalf("Annealing did not found the better value that supose to be 0.75")
 	}
 
+}
+
+///////////////////////////////////////////////////////////////////////////////
+func TestTimeTablingApproachMaximum(t *testing.T) {
+	log.Println("TestTimeTablingApproachMaximum...")
+
+	best_func := new_time_table(3, 5, 3, 5)
+	last_func := new_time_table(3, 5, 3, 5)
+
+	searchAnnealing := annealing{
+		temperaturaInicial: math.MaxFloat64,
+		temperaturaFinal:   10e-11,
+		temperaturaAtual:   math.MaxFloat64,
+		resfriamento:       (1 - .05),
+		passos:             100,
+		passoAtual:         100,
+		energiaInicial:     0,
+		energiaFinal:       0,
+		delta:              0,
+		sorteio:            0,
+		prob:               0,
+		prazo:              10,
+		best:               &best_func,
+		last:               &last_func,
+	}
+
+	startValue := best_func.f()
+
+	log.Printf("Start value for time table: %.3f\n", startValue)
+
+	searchAnnealing.run()
+
+	log.Printf("Final value for time table: %.3f\n", best_func.f())
+
+	if best_func.f() <= startValue {
+		t.Fatalf("Annealing could not improve the time table proposed.")
+	}
 }
