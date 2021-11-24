@@ -64,20 +64,20 @@ func TestFoundMaximum(t *testing.T) {
 	last_func := &quadratic{-2, 3, 2, +1}
 
 	searchAnnealing := Annealing{
-		temperaturaInicial: math.MaxFloat64,
-		temperaturaFinal:   10e-11,
-		temperaturaAtual:   math.MaxFloat64,
-		resfriamento:       (1 - .05),
-		passos:             100,
-		passoAtual:         100,
-		energiaInicial:     0,
-		energiaFinal:       0,
-		delta:              0,
-		sorteio:            0,
-		prob:               0,
-		prazo:              10,
-		best:               best_func,
-		last:               last_func,
+		TemperaturaInicial: math.MaxFloat64,
+		TemperaturaFinal:   10e-11,
+		TemperaturaAtual:   math.MaxFloat64,
+		Resfriamento:       (1 - .05),
+		Passos:             100,
+		PassoAtual:         100,
+		EnergiaInicial:     0,
+		EnergiaFinal:       0,
+		Delta:              0,
+		Sorteio:            0,
+		Prob:               0,
+		Prazo:              10,
+		Best:               best_func,
+		Last:               last_func,
 	}
 
 	searchAnnealing.run()

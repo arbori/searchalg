@@ -20,30 +20,30 @@ type Function interface {
 
 type Annealing struct {
 	// Temperatura inicial do processo.
-	temperaturaInicial float64
+	TemperaturaInicial float64
 	// Temperatura final do processo.
-	temperaturaFinal float64
+	TemperaturaFinal float64
 	// Definição da temperatura máxima do processo de annealing.
-	temperaturaAtual float64
-	// Taxa de resfriamento do processo.
-	resfriamento float64
+	TemperaturaAtual float64
+	// Taxa de Resfriamento do processo.
+	Resfriamento float64
 
 	// Número de tentativas de baixar a temperatura.
-	passos int
+	Passos int
 	// Indica qual o passo atual do processo.
-	passoAtual int
+	PassoAtual int
 
 	// Variáveis de monitoração do processo
-	energiaInicial float64
-	energiaFinal   float64
-	delta          float64
-	sorteio        float64
-	prob           float64
+	EnergiaInicial float64
+	EnergiaFinal   float64
+	Delta          float64
+	Sorteio        float64
+	Prob           float64
 
-	prazo int64
+	Prazo int64
 
-	best Function
-	last Function
+	Best Function
+	Last Function
 }
 
 /*
@@ -54,45 +54,45 @@ type Annealing struct {
 func (ann Annealing) run() {
 	rand.Seed(time.Now().UnixNano())
 
-	ann.energiaInicial = ann.best.compute() // Pega a energia inicial do sistema
-	ann.energiaFinal = 0.0
+	ann.EnergiaInicial = ann.Best.compute() // Pega a energia inicial do sistema
+	ann.EnergiaFinal = 0.0
 
 	// Calcula o momento de termino T.
-	fim := time.Now().Local().Add(time.Second * time.Duration(ann.prazo))
+	fim := time.Now().Local().Add(time.Second * time.Duration(ann.Prazo))
 
 	// Processa o resfriamento do sistema.
 	for fim.After(time.Now()) {
 		// Busca uma configuração para a dada temperatura
 		//um certo número de vezes.
-		for ann.passoAtual = ann.passos; ann.passoAtual >= 0; ann.passoAtual -= 1 {
-			ann.best.reconfigure()
+		for ann.PassoAtual = ann.Passos; ann.PassoAtual >= 0; ann.PassoAtual -= 1 {
+			ann.Best.reconfigure()
 
 			// Calcula a energia atual do sistema.
-			ann.energiaFinal = ann.best.compute()
+			ann.EnergiaFinal = ann.Best.compute()
 			// Calcula a variação de energia.
-			ann.delta = (ann.energiaFinal - ann.energiaInicial)
+			ann.Delta = (ann.EnergiaFinal - ann.EnergiaInicial)
 
 			// Compute some probability
-			ann.sorteio = rand.Float64()
+			ann.Sorteio = rand.Float64()
 			// Compute Boltzman probability
-			ann.prob = math.Exp((-1 * ann.delta) / (BOLTZMAN_CONSTANT * ann.temperaturaAtual))
+			ann.Prob = math.Exp((-1 * ann.Delta) / (BOLTZMAN_CONSTANT * ann.TemperaturaAtual))
 
 			// Verifica se aceita a nova configuração.
 			// Para uma nova configuração ser aceita além da variação de energia e da probabilidade
 			// deve atender as restrições do problema.
-			if (ann.delta <= 0 || ann.sorteio < ann.prob) && ann.best.isValid() {
-				if ann.delta != 0 {
-					ann.energiaInicial = ann.energiaFinal
-					ann.last.assign(ann.best)
+			if (ann.Delta <= 0 || ann.Sorteio < ann.Prob) && ann.Best.isValid() {
+				if ann.Delta != 0 {
+					ann.EnergiaInicial = ann.EnergiaFinal
+					ann.Last.assign(ann.Best)
 				}
 			} else {
-				ann.energiaFinal = ann.energiaInicial
+				ann.EnergiaFinal = ann.EnergiaInicial
 			}
 		}
 
-		ann.best.assign(ann.last)
+		ann.Best.assign(ann.Last)
 
-		ann.passoAtual = ann.passos
-		ann.temperaturaAtual = ann.resfriamento * ann.temperaturaAtual
+		ann.PassoAtual = ann.Passos
+		ann.TemperaturaAtual = ann.Resfriamento * ann.TemperaturaAtual
 	}
 }
