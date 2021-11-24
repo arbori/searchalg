@@ -63,7 +63,7 @@ func TestFoundMaximum(t *testing.T) {
 	best_func := &quadratic{-2, 3, 2, -1}
 	last_func := &quadratic{-2, 3, 2, +1}
 
-	searchAnnealing := annealing{
+	searchAnnealing := Annealing{
 		temperaturaInicial: math.MaxFloat64,
 		temperaturaFinal:   10e-11,
 		temperaturaAtual:   math.MaxFloat64,
@@ -88,43 +88,4 @@ func TestFoundMaximum(t *testing.T) {
 		t.Fatalf("Annealing did not found the better value that supose to be 0.75")
 	}
 
-}
-
-///////////////////////////////////////////////////////////////////////////////
-func TestTimeTablingApproachMaximum(t *testing.T) {
-	log.Println("TestTimeTablingApproachMaximum...")
-
-	best_func := new_time_table(3, 5, 3, 5, .4)
-	last_func := new_time_table(3, 5, 3, 5, .4)
-
-	searchAnnealing := annealing{
-		temperaturaInicial: math.MaxFloat64,
-		temperaturaFinal:   10e-11,
-		temperaturaAtual:   math.MaxFloat64,
-		resfriamento:       (1 - .05),
-		passos:             100,
-		passoAtual:         100,
-		energiaInicial:     0,
-		energiaFinal:       0,
-		delta:              0,
-		sorteio:            0,
-		prob:               0,
-		prazo:              60,
-		best:               &best_func,
-		last:               &last_func,
-	}
-
-	startValue := -searchAnnealing.best.compute()
-
-	log.Printf("Start value for time table: %.3f\n", startValue)
-
-	searchAnnealing.run()
-
-	finalValue := -searchAnnealing.best.compute()
-
-	log.Printf("Final value for time table: %.3f\n", finalValue)
-
-	if finalValue <= startValue {
-		t.Fatalf("Annealing could not improve the time table proposed.")
-	}
 }
