@@ -40,7 +40,7 @@ func (q *quadratic) reconfigure() {
 	q.x = q.x + sign*rand.Float64()
 }
 
-func (q *quadratic) assign(g function) {
+func (q *quadratic) assign(g Function) {
 	f, ok := g.(*quadratic)
 
 	if ok {

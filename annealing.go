@@ -8,12 +8,12 @@ import (
 
 const Kb = 8.6173432e-5
 
-type function interface {
+type Function interface {
 	compute() float64
 
 	reconfigure()
 
-	assign(f function)
+	assign(f Function)
 
 	isValid() bool
 }
@@ -42,8 +42,8 @@ type annealing struct {
 
 	prazo int64
 
-	best function
-	last function
+	best Function
+	last Function
 }
 
 /*
@@ -226,7 +226,7 @@ func (tt *time_table) reconfigure() {
 	}
 }
 
-func (tt *time_table) assign(f function) {
+func (tt *time_table) assign(f Function) {
 	val := f.(*time_table)
 
 	var disciplina int
