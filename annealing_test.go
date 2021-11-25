@@ -16,11 +16,11 @@ func quadratic_function(q *quadratic) float64 {
 	return q.a*q.x*q.x + q.b*q.x + q.c
 }
 
-func (q *quadratic) compute() float64 {
+func (q *quadratic) Compute() float64 {
 	return -quadratic_function(q)
 }
 
-func (q *quadratic) reconfigure() {
+func (q *quadratic) Reconfigure() {
 	sign := 1.0
 
 	if rand.Int()%2 != 0 {
@@ -40,7 +40,7 @@ func (q *quadratic) reconfigure() {
 	q.x = q.x + sign*rand.Float64()
 }
 
-func (q *quadratic) assign(g Function) {
+func (q *quadratic) Assign(g Function) {
 	f, ok := g.(*quadratic)
 
 	if ok {
@@ -51,41 +51,44 @@ func (q *quadratic) assign(g Function) {
 	}
 }
 
-func (q *quadratic) isValid() bool {
+func (q *quadratic) IsValid() bool {
 	return true
 }
 
-const maximumValue = 0.75
+func (q *quadratic) Clone() Function {
+	result := quadratic{}
+
+	result.a = q.a
+	result.b = q.b
+	result.c = q.c
+	result.x = q.x
+
+	return &result
+}
 
 func TestFoundMaximum(t *testing.T) {
 	log.Println("TestFoundMaximum...")
 
 	best_func := &quadratic{-2, 3, 2, -1}
-	last_func := &quadratic{-2, 3, 2, +1}
 
-	searchAnnealing := Annealing{
-		TemperaturaInicial: math.MaxFloat64,
-		TemperaturaFinal:   10e-11,
-		TemperaturaAtual:   math.MaxFloat64,
-		Resfriamento:       (1 - .05),
-		Passos:             100,
-		PassoAtual:         100,
-		EnergiaInicial:     0,
-		EnergiaFinal:       0,
-		Delta:              0,
-		Sorteio:            0,
-		Prob:               0,
-		Prazo:              10,
-		Best:               best_func,
-		Last:               last_func,
+	ctx := AnnealingContext{
+		InitialTemperature: math.MaxFloat64,
+		FinalTemperature:   10e-11,
+		Cooling:            .001,
+		Steps:              150,
+		Deadline:           15,
 	}
 
-	searchAnnealing.run()
+	SimulatedAnnealing(ctx, best_func)
 
-	log.Printf("Maximum value of f(x) = %.3f\n", best_func.x)
+	var maximumValue = 0.75
 
-	if math.Abs(best_func.x-maximumValue) > float64(10e-5) {
+	log.Printf("Value expected to maximize f(x) is x = %.2f\n", maximumValue)
+	log.Printf("Value founded for x  = %.9f\n", best_func.x)
+	log.Printf("Error expected for |x - %.2f| = %.9f\n", maximumValue, float64(1e-5))
+	log.Printf("Error founded  for |x - %.2f| = %.9f\n", maximumValue, math.Abs(best_func.x-maximumValue))
+
+	if math.Abs(best_func.x-maximumValue) > float64(1e-5) {
 		t.Fatalf("Annealing did not found the better value that supose to be 0.75")
 	}
-
 }
