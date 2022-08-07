@@ -1,4 +1,4 @@
-package searchalg
+package stochastic
 
 import (
 	"math"
